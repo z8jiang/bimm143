@@ -1,0 +1,160 @@
+---
+title: "Class 5: Data visualization"
+author: "Zichen \"Cardiff\" Jiang (PID: A15894479)"
+format: pdf
+---
+
+# Base R graphics vs ggplots
+
+There are many graphics systems available in R, including so co-called"base" R graphics and the very popular **ggplot2** package.
+
+To compare these let's play with the inbuilt `cars` dataset.
+
+```{r}
+head(cars)
+```
+
+To use "base" R, I can simply call the `plot()` function:
+
+```{r}
+plot(cars)
+```
+
+To use `ggplot2` package, I first need to install it with the function `install.packages("ggplot2")`.
+
+I will run this in my R console (i.e. the R brain) as I do not want to re-install it every time I render my report...
+
+The main function in this package is called `ggplot()` . Can I use call it?
+
+```{r}
+# install.packages("ggplot2")
+library(ggplot2)
+ggplot()
+```
+
+To make a figure with `ggplot()`, I need always at least 3 things:
+
+-   **data** (i.e. what I want to plot)
+
+-   **aes**: aesthetic mapping of the data to the plot I want
+
+-   **geom** (i.e. How I want to plot the data)
+
+```{r}
+ggplot(data=cars) + 
+  aes(x=speed, y=dist) + 
+  geom_point()
+```
+
+If I want to add more stuff, I can just keep adding layers. E.g.
+
+```{r}
+theme_update(plot.title = element_text(hjust = 0.5))
+ggplot(data=cars) + 
+  aes(x=speed, y=dist) + 
+  geom_point() + 
+  geom_smooth(method = lm, se = FALSE) + 
+  ggtitle(label = "My first ggplot", subtitle = "bebe")
+```
+
+Ggplot is much more verbose than "base" R plots for standard plots but it has a consistent layer system that I can use to make just about my plot.
+
+To add labels to plot
+
+```{r}
+ggplot(data=cars) + 
+  aes(x=speed, y=dist) + 
+  geom_point() + 
+  geom_smooth(method = lm, se = FALSE) + 
+  labs(title = "Stopping distance for old cars",
+       subtitle = "A random sample of 1993 car models",
+       caption = "BIMM 143 lab 5",
+       x="Speed (MPG)",
+       y="Stopping distance (ft)") + 
+  theme_bw()
+```
+
+## A more complicated plot
+
+Let's plot some gene expression data
+
+```{r}
+url <- "https://bioboot.github.io/bimm143_S20/class-material/up_down_expression.txt"
+genes <- read.delim(url)
+head(genes)
+```
+
+> Q How do you tell how many rows are in the `genes` dataframe?
+
+```{r}
+nrow(genes)
+```
+
+> Q How can we summarize that last column `State`?
+
+```{r}
+table(genes$State)
+```
+
+Now we start plotting
+
+```{r}
+p <- ggplot(genes) + 
+  aes(x=Condition1, y=Condition2, color=State) + 
+  geom_point()
+p
+```
+
+I can now just call `p` when I want to plot or add to it.
+
+```{r}
+p <- p + labs(title="Expression comparison of 5196 genes",
+       x="Control", y="Drug treated")
+p
+```
+
+To use custom color scale
+
+```{r}
+p <- p + scale_color_manual( values=c("blue", "grey", "red") )
+p
+```
+
+## Going further
+
+Here I can read a slightly larger dataset
+
+```{r}
+url <- "https://raw.githubusercontent.com/jennybc/gapminder/master/inst/extdata/gapminder.tsv"
+
+gapminder <- read.delim(url)
+head(gapminder)
+```
+
+```{r}
+p2 <- ggplot(gapminder) + 
+  aes(x=gdpPercap, y=lifeExp, col=continent, size=pop) + 
+  geom_point(alpha=0.3)
+p2
+```
+
+A very useful layer to add sometimes is for "facetting"
+
+```{r}
+p2 <- p2 + facet_wrap(~continent)
+p2
+```
+
+```{r}
+library(dplyr)
+
+gapminder_top5 <- gapminder %>% 
+  filter(year==2007) %>% 
+  arrange(desc(pop)) %>% 
+  top_n(5, pop)
+
+ggplot(gapminder_top5) + 
+  aes(x = country, y = pop) + 
+  geom_col()
+  
+```
